@@ -27,8 +27,11 @@
   "jspm": {
     "configFile": "src/js/config.js",
     "dependencies": {
+      "d3": "npm:d3@^4.3.0",
+      "graph-scroll": "npm:graph-scroll@^0.0.3",
       "guardian/iframe-messenger": "github:guardian/iframe-messenger@master",
       "json": "github:systemjs/plugin-json@^0.1.0",
+      "requests": "npm:requests@^0.1.7",
       "reqwest": "github:ded/reqwest@^1.1.5",
       "text": "github:systemjs/plugin-text@^0.0.2"
     },

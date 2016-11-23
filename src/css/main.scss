@@ -3,3 +3,97 @@
 @import "mq";
 @import "general";
 @import "share";
+
+
+#outer-wrapper {
+	max-width: 1260px;
+	position: relative;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+#header {
+	width: 100%;
+	background: #ffffff url("../img/pokies-placeholder.jpg") no-repeat ;
+	background-size: 100%;
+	min-height:400px;
+	position: relative;
+}
+
+.headerContainer {
+	position:absolute;
+	left:5%;
+	bottom:30%;
+	color:#FFF;
+}
+
+#header h1 {
+	font-size:3rem; 
+}
+
+#container, #container2{
+  position: relative;
+  width: 100%;
+  overflow: auto;
+}
+#sections, #sections2{
+  width: 29%;
+  margin-right:1%;
+  float: left;
+}
+#sections > div, #sections2 > div{
+  background: white;
+  opacity: .2;
+  margin-bottom:1%;
+}
+#sections > div.graph-scroll-active, #sections2 > div.graph-scroll-active{
+  opacity: 1;
+}
+#graphicContainer {
+  float: left;
+  width: 69%;
+  margin-left:1%;
+}
+#graphicContainer.graph-scroll-fixed {
+  position: fixed;
+  top: 0px;
+  margin-left: 380px;
+}
+#graphicContainer.graph-scroll-below {
+  position: absolute;
+  bottom: 0px;
+  margin-left: 380px;
+}
+
+#graphic {
+	position: relative;
+}
+
+.mono{
+  font-family: monospace;
+}
+svg{
+  background-color: #eee;
+}
+
+#scoreCounter {
+	position: absolute;
+	top:2%;
+	left:2%;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #bfbfbf;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  fill:#767676;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2px;
+}
