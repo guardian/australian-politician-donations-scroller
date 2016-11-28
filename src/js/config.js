@@ -27,7 +27,7 @@ System.config({
     "guardian/iframe-messenger": "github:guardian/iframe-messenger@master",
     "json": "github:systemjs/plugin-json@0.1.2",
     "requests": "npm:requests@0.1.7",
-    "reqwest": "github:ded/reqwest@1.1.5",
+    "reqwest": "github:ded/reqwest@2.0.5",
     "text": "github:systemjs/plugin-text@0.0.2",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.4.1"
