@@ -4,23 +4,40 @@ import * as d3 from 'd3'
 export function createScroller() {
 var button,regPicks,intPicks,features,svg;
 var activateFunctions = [];
-var gW = document.querySelector("#graphic").getBoundingClientRect().width,
-gH = gW*0.6,
-r = 40;
-console.log(gW);
+var pageWidth = document.documentElement.clientWidth;
+var pageHeight = document.documentElement.clientHeight;
 
-var pageHeight = document.documentElement.clientHeight
+var twoColumns = false;
 
-d3.selectAll('#sections > div').style("height", pageHeight + "px")
+if (twoColumns) {
+	var gW = document.querySelector("#graphic").getBoundingClientRect().width,
+	gH = gW*0.6,
+	r = 40;
+}
+
+else {
+	var gW = document.querySelector("#container1").getBoundingClientRect().width,
+	gH = pageHeight*0.66,
+	r = 40;
+}
+
+console.log("pageHeight",pageHeight,"pageWidth", pageWidth, "gW",gW,"gH",gH)
+
+d3.selectAll('#sections > div').style("height", pageHeight*0.33 + "px")
+
+d3.select(d3.selectAll('#sections > div').nodes().pop()).style("height", pageHeight + "px")
+
+// d3.select(d3.selectAll('#sections > div')[0].pop()).style("height", pageHeight + "px")
+
 
 var gs = graphScroll.graphScroll()
-    .container(d3.select('#container1'))
-    .graph(d3.selectAll('.graphicContainer'))
-    .sections(d3.selectAll('#sections > div'))
-    .on('active', function(i){
-        activateFunctions[i]();
-    });
-console.log("pageHeight",pageHeight,"gW",gW,"gH",gH)
+	.container(d3.select('#container1'))
+	.graph(d3.selectAll('.graphicContainer'))
+	.sections(d3.selectAll('#sections > div'))
+	.on('active', function(i){
+		activateFunctions[i]();
+	});
+
 
 svg = d3.select('#graphic').append('svg')
   .attr("width", gW)
@@ -38,28 +55,28 @@ function makeButton() {
   button = features.append('circle');
 
   button
-    .attr("id","button")
-    .style("fill","#4bc6df")
-    .attr("cx", gW/2)
-    .attr("cy",gH/2)
-    .attr("r",0)
+	.attr("id","button")
+	.style("fill","#4bc6df")
+	.attr("cx", gW/2)
+	.attr("cy",gH/2)
+	.attr("r",0)
 
 
 } //end makeButton
 
 function submitTimes(times) {
 
-    var gformUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScSAqULG2Ozj7JPQAfjKs9nPYR8Kv3XhVACPH0ddCMKD3mc9Q/formResponse';
-    var dataTimes = {'entry.1898863029':times}
-    var data = '';
-    for (var key in dataTimes) {
-        data += encodeURIComponent(key) + '=' + encodeURIComponent(dataTimes[key]) + '&';
-    }
-    console.log(data)
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', gformUrl, true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.send(data.substr(0, data.length-1));
+	var gformUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScSAqULG2Ozj7JPQAfjKs9nPYR8Kv3XhVACPH0ddCMKD3mc9Q/formResponse';
+	var dataTimes = {'entry.1898863029':times}
+	var data = '';
+	for (var key in dataTimes) {
+		data += encodeURIComponent(key) + '=' + encodeURIComponent(dataTimes[key]) + '&';
+	}
+	console.log(data)
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', gformUrl, true);
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	xhr.send(data.substr(0, data.length-1));
 
 }
 
@@ -70,129 +87,129 @@ function regularReward() {
 
 
   button
-    .transition()
-    .attr("r",40);
+	.transition()
+	.attr("r",40);
 
-    console.log('regularReward')
+	console.log('regularReward')
 
-    regPicks = [];
+	regPicks = [];
 
-    scoreCounter = 0;
-    var hasClicked = false;
-    var firstTime;
+	scoreCounter = 0;
+	var hasClicked = false;
+	var firstTime;
 
-    d3.select("#scoreCounter").html(scoreCounter);
+	d3.select("#scoreCounter").html(scoreCounter);
 
    function giveScore() {
 
-      button
-      .transition()
-        .duration(50)
-        .attr("r",r-2)
-      .transition()
-        .duration(50)
-        .attr("r",r) 
+	  button
+	  .transition()
+		.duration(50)
+		.attr("r",r-2)
+	  .transition()
+		.duration(50)
+		.attr("r",r) 
 
-    var rewardPick = 100;
-    console.log(rewardPick);
-    scoreCounter = scoreCounter + rewardPick;
+	var rewardPick = 100;
+	console.log(rewardPick);
+	scoreCounter = scoreCounter + rewardPick;
 
-    if (!hasClicked) {
-      firstTime = new Date();
-      hasClicked = true;
-    }
-    
-    var now = new Date();
+	if (!hasClicked) {
+	  firstTime = new Date();
+	  hasClicked = true;
+	}
+	
+	var now = new Date();
 
-    var timeDiff = now - firstTime;
-    console.log(timeDiff);
-    regPicks.push({'score':scoreCounter,'time':timeDiff});
+	var timeDiff = now - firstTime;
+	console.log(timeDiff);
+	regPicks.push({'score':scoreCounter,'time':timeDiff});
 
-    console.log(scoreCounter);
-    d3.select("#scoreCounter").html(scoreCounter);
+	console.log(scoreCounter);
+	d3.select("#scoreCounter").html(scoreCounter);
 
-      svg.append("text")
-        .attr("x", gW/2)
-        .attr("text-anchor", "middle")
-        .attr("y", gH/2 - r)
-        .text(rewardPick)
-      .transition()
-        .duration(1000)
-        .ease(d3.easeLinear)
-          .style("opacity",0)
-          .attr("x", gW/2)
-          .attr("y", gH*0.1)    
-          .remove();
+	  svg.append("text")
+		.attr("x", gW/2)
+		.attr("text-anchor", "middle")
+		.attr("y", gH/2 - r)
+		.text(rewardPick)
+	  .transition()
+		.duration(1000)
+		.ease(d3.easeLinear)
+		  .style("opacity",0)
+		  .attr("x", gW/2)
+		  .attr("y", gH*0.1)    
+		  .remove();
 
-    }  
+	}  
 
-    button
-      .on("click", giveScore);
+	button
+	  .on("click", giveScore);
 
 }
 
 
 function intermittentReward() {
 
-    console.log('intermittentReward')
-    intPicks = [];
-    scoreCounter = 0;
-    d3.select("#scoreCounter").html(scoreCounter);
-    var hasClicked = false;
-    var firstTime;
+	console.log('intermittentReward')
+	intPicks = [];
+	scoreCounter = 0;
+	d3.select("#scoreCounter").html(scoreCounter);
+	var hasClicked = false;
+	var firstTime;
 
-    button
-      .transition()
-      .style("fill","#005689")
+	button
+	  .transition()
+	  .style("fill","#005689")
 
-    function giveScore() {
+	function giveScore() {
 
-    button
-      .transition()
-        .duration(50)
-        .attr("r",r-2)
-      .transition()
-        .duration(50)
-        .attr("r",r) 
+	button
+	  .transition()
+		.duration(50)
+		.attr("r",r-2)
+	  .transition()
+		.duration(50)
+		.attr("r",r) 
 
-    var rewardOnly = [100,0,0,0,0];
-    var rewardPick = rewardOnly[Math.floor(Math.random() * (rewardOnly.length)) + 0];
-    console.log(rewardPick);
-    scoreCounter = scoreCounter + rewardPick;
-    console.log(scoreCounter);
-
-
-    if (!hasClicked) {
-      firstTime = new Date();
-      hasClicked = true;
-    }
-    
-    var now = new Date();
-
-    var timeDiff = now - firstTime;
-    console.log(timeDiff);
-    intPicks.push({'score':scoreCounter,'time':timeDiff});
-
-    d3.select("#scoreCounter").html(scoreCounter);
-    
-      svg.append("text")
-        .attr("x", gW/2)
-        .attr("text-anchor", "middle")
-        .attr("y", gH/2 - r)
-        .text(rewardPick)
-      .transition()
-        .duration(1000)
-        .ease(d3.easeLinear)
-          .style("opacity",0)
-          .attr("x", gW/2)
-          .attr("y", gH*0.1)    
-          .remove();
-
-    }
+	var rewardOnly = [100,0,0,0,0];
+	var rewardPick = rewardOnly[Math.floor(Math.random() * (rewardOnly.length)) + 0];
+	console.log(rewardPick);
+	scoreCounter = scoreCounter + rewardPick;
+	console.log(scoreCounter);
 
 
-      button
-    .on("click", giveScore);
+	if (!hasClicked) {
+	  firstTime = new Date();
+	  hasClicked = true;
+	}
+	
+	var now = new Date();
+
+	var timeDiff = now - firstTime;
+	console.log(timeDiff);
+	intPicks.push({'score':scoreCounter,'time':timeDiff});
+
+	d3.select("#scoreCounter").html(scoreCounter);
+	
+	  svg.append("text")
+		.attr("x", gW/2)
+		.attr("text-anchor", "middle")
+		.attr("y", gH/2 - r)
+		.text(rewardPick)
+	  .transition()
+		.duration(1000)
+		.ease(d3.easeLinear)
+		  .style("opacity",0)
+		  .attr("x", gW/2)
+		  .attr("y", gH*0.1)    
+		  .remove();
+
+	}
+
+
+	  button
+	.on("click", giveScore);
 
   } //end intermittentReward();
 
@@ -203,34 +220,34 @@ function graphResults() {
   var temp = regPicks.concat(intPicks);
 
   button
-    .transition()
-    .attr("r",0);
+	.transition()
+	.attr("r",0);
 
   
   var x = d3.scaleLinear()
-            .range([0, gW]);
+			.range([0, gW]);
 
   var y = d3.scaleLinear()
-            .range([gH, 0]);
+			.range([gH, 0]);
 
   x.domain(d3.extent(temp, function(d) { return d.time; }));
   y.domain(d3.extent(temp, function(d) { return d.score; }));  
 
   var line = d3.line()
-            .x(function(d) { return x(d.time); })
-            .y(function(d) { return y(d.score); });    
+			.x(function(d) { return x(d.time); })
+			.y(function(d) { return y(d.score); });    
 
   svg.append("path")
-      .datum(regPicks)
-      .attr("class", "line")
-      .style("stroke","#4bc6df")
-      .attr("d", line)
+	  .datum(regPicks)
+	  .attr("class", "line")
+	  .style("stroke","#4bc6df")
+	  .attr("d", line)
 
   svg.append("path")
-      .datum(intPicks)
-      .attr("class", "line")
-      .style("stroke","#005689")
-      .attr("d", line)    
+	  .datum(intPicks)
+	  .attr("class", "line")
+	  .style("stroke","#005689")
+	  .attr("d", line)    
 
 } //end graphReg
 
@@ -249,6 +266,6 @@ activateFunctions[3] = graphResults;
 
 
 d3.select('#footer')
-    .style({'margin-bottom': window.innerHeight - 500 + 'px', padding: '100px'})
+	.style({'margin-bottom': window.innerHeight - 500 + 'px', padding: '100px'})
 
 }
