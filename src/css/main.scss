@@ -23,28 +23,40 @@
 
 	// left-right col layout
 
-	// .sectionCol {
-	// 	float:left;
-	// 	width:32%;
-	// 	margin-right:1%; 
-	// }
-
-	// .graphicCol {
-	// 	float:left;
-	// 	width:65%;
-	// 	margin-right:1%; 
-	// }
-
 	.sectionCol {
 		float:left;
-		width:100%;
+		width:32%;
 		margin-right:1%; 
 	}
 
 	.graphicCol {
-		position: fixed;
-		top:33%;
+		float:left;
+		width:65%;
+		margin-right:1%; 
 	}
+
+	.graphicContainer.graph-scroll-fixed #graphic {
+		position: fixed;
+		top:0;
+	}
+
+	//single col layout
+
+	// .sectionCol {
+	// 	float:left;
+	// 	width:100%;
+	// 	margin-right:1%; 
+	// }
+
+	// .graphicCol {
+	// 	position: fixed;
+	// 	top:33%;
+	// }
+
+	// .graphicContainer.graph-scroll-fixed #graphic {
+	// 	position: fixed;
+	// 	top:0;
+	// }
 
 	.headerContainer {
 		position:absolute;
@@ -78,10 +90,7 @@
 		opacity: 1;
 	}
 	
-	.graphicContainer.graph-scroll-fixed #graphic {
-		position: fixed;
-		top:33%;
-	}
+	
 
 	.graphicContainer.graph-scroll-fixed {
 		position: absolute;

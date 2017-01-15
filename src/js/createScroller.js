@@ -7,7 +7,7 @@ var activateFunctions = [];
 var pageWidth = document.documentElement.clientWidth;
 var pageHeight = document.documentElement.clientHeight;
 
-var twoColumns = false;
+var twoColumns = true;
 
 if (twoColumns) {
 	var gW = document.querySelector("#graphic").getBoundingClientRect().width,
@@ -254,7 +254,7 @@ function graphResults() {
 
 function doNothing() {
   console.log("yieewwww")
-}// 
+}
 
 
 makeButton();
