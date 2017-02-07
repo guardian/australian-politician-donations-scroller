@@ -2,15 +2,15 @@ import * as graphScroll from 'graph-scroll'
 import * as d3 from 'd3'
 import detectIE from './detectIE'
 
-export function createScroller(data) {
+export function createScroller(networkData,donorData) {
 
 var version = detectIE();	
-var features,svg;
+var features,svg,simulation;
 var activateFunctions = [];
 var pageWidth = document.documentElement.clientWidth;
 var pageHeight = document.documentElement.clientHeight;
 var width,height;
-
+var firstRun = true;
 var twoColumns = false;
 
 if (twoColumns) {
@@ -43,7 +43,7 @@ var tempRadiusData = [];
 var tempLinkData = [];
 var nodeCounts = [];
 
-d3.values(data).forEach(function(d) {
+d3.values(networkData).forEach(function(d) {
 	nodeCounts.push(d.nodes.length);
 	d.nodes.forEach(function (nodeData) {
 		tempRadiusData.push(nodeData.totalDonationsMade);
@@ -56,7 +56,7 @@ d3.values(data).forEach(function(d) {
 
 
 var selector = d3.select("#partySelector");
-var allEntities = d3.keys(data);
+var allEntities = d3.keys(networkData);
 
 
 
@@ -89,7 +89,6 @@ svg = d3.select("#graphic").append("svg")
 features = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-var color = d3.scaleOrdinal(d3.schemeCategory20);
 var outline = d3.scaleOrdinal()
 				.domain(['Other Receipt','Donation','Mixed','Unknown'])
 				.range(['#005689','#b82266','#767676','#767676'])	
@@ -131,10 +130,35 @@ function arrow(color) {
 }    
 
 function makeChart(partyName) {
-	
-	var totalNodes = data[partyName].nodes.length;
 
-	var simulation = d3.forceSimulation()
+	console.log("makeChart")
+
+	simulation.stop();
+
+	console.log(donorData);
+
+	features.selectAll(".links")
+		.transition()
+		.style("opacity",0)
+		.remove();
+
+	features.selectAll(".nodes circle")
+		.transition()
+		.attr("r",0)
+		.remove();
+
+	features.selectAll(".nodes")
+		.transition()
+		.remove();	
+
+	features.selectAll(".nodes text")
+		.transition()
+		.style("opacity",0)
+		.remove();
+	
+	var totalNodes = networkData[partyName].nodes.length;
+
+	simulation = d3.forceSimulation()
 		    .force("link", d3.forceLink().id(function(d) { return d.name; }).distance(distance))
 		    .force("collide", d3.forceCollide().radius(function(d) { 
 		    	if (d.totalDonationsMade > d.totalReceivedDonations ) {
@@ -146,7 +170,8 @@ function makeChart(partyName) {
 	      	}
 		    }).iterations(2))
 		    .force("charge", d3.forceManyBody().strength(charge))
-		    .force("center", d3.forceCenter(width / 2, height / 2));		
+		    .force("center", d3.forceCenter(width / 2, height / 2));	
+
 	var forceStrength = 150;	
 
 	function charge(d) {
@@ -168,20 +193,12 @@ function makeChart(partyName) {
 		return 3 * (radius(d3.max(tempLinkLength)) + radiusVal);
 	}  
 
-	features.selectAll(".links")
-		.transition()
-		.style("opacity",0)
-		.remove();
+		
 
-	features.selectAll(".nodes circle")
-		.transition()
-		.attr("r",0)
-		.remove();
-
-  var link = features.append("g")
+  	var link = features.append("g")
 			    .attr("class", "links")
 			    .selectAll("line")
-				    .data(data[partyName].links)
+				    .data(networkData[partyName].links)
 				    .enter().append("line")
 				    .attr("stroke-width", function(d) { return 2 })
 				    .attr("stroke", function(d) { 
@@ -197,7 +214,7 @@ function makeChart(partyName) {
 	var node = features.append("g")
 	      .attr("class", "nodes")
 	    .selectAll("circle")
-	    .data(data[partyName].nodes)
+	    .data(networkData[partyName].nodes)
 	    .enter().append("circle")
 	      .attr("r", function(d) { 
 	      	if (d.totalDonationsMade > d.totalReceivedDonations ) {
@@ -219,11 +236,11 @@ function makeChart(partyName) {
 	          .on("end", dragended));
 
 		  simulation
-		      .nodes(data[partyName].nodes)
+		      .nodes(networkData[partyName].nodes)
 		      .on("tick", ticked);
 
 		  simulation.force("link")
-		      .links(data[partyName].links);
+		      .links(networkData[partyName].links);
 
 
 
@@ -292,7 +309,87 @@ function makeChart(partyName) {
 	  d.fy = null;
 	}    
 
-}  	
+}  
+
+function makeBubbles() {
+
+	console.log("makeBubbles", firstRun, donorData);
+	if (!firstRun) {
+		simulation.stop();
+	}
+
+	var bubbleRadius = d3.scaleSqrt().range([4, 50]).domain(d3.extent(donorData, function(d) {return d.sum}));
+
+	features.selectAll(".links")
+		.transition()
+		.style("opacity",0)
+		.remove();
+
+	// features.selectAll(".nodes circle")
+	// 	.transition()
+	// 	.attr("r",0);
+
+	features.selectAll(".nodes")
+		.remove();
+
+	var center = {x: width / 2, y: height / 2};
+	var forceStrength = 0.03;
+
+	simulation = d3.forceSimulation(donorData)
+	    .velocityDecay(0.2)
+		  .force('x', d3.forceX().strength(forceStrength).x(center.x))
+		  .force('y', d3.forceY().strength(forceStrength).y(center.y))
+		  .force('charge', d3.forceManyBody().strength(-10))
+		  .force("collide", d3.forceCollide().radius(function(d) { return bubbleRadius(d.sum) + 0.5; }).iterations(2))
+	    .alphaTarget(1)
+	    .on("tick", ticked);
+
+	function charge(d) {
+	  return -forceStrength * Math.pow(bubbleRadius(d.sum), 2.0);
+	}    
+
+	function ticked() {
+	 	features.selectAll(".nodes").attr("transform", function(d) { return "translate(" + Math.max(bubbleRadius(d.sum), Math.min(width - bubbleRadius(d.sum), d.x)) + "," + Math.max(bubbleRadius(d.sum), Math.min(height - bubbleRadius(d.sum), d.y)) + ")" });
+	}
+
+	var node = features.selectAll(".nodes").data(donorData);
+
+	var nodeContainer = node.enter()
+			.append("g")
+			.attr("class","nodes");
+
+	nodeContainer
+			.append("circle")		
+			.attr("fill", function(d) { return nodeColors(d.donType); })
+			.attr("r", 0)
+
+	nodeContainer
+			.append("text")
+			.attr("text-anchor", "middle")
+			.attr("dy", function(d) { return -1 * bubbleRadius(d.sum);})		
+			.text(function(d) { return "$" + d.sum });	
+
+	d3.selectAll(".nodes circle")
+		.transition()
+		.attr("r",function (d) {
+			console.log(d);
+			return bubbleRadius(d.sum);
+		});
+
+	d3.selectAll(".nodes text")
+		.transition()
+		.attr("dy", function(d) { return -1 * bubbleRadius(d.sum);});
+
+	// Update and restart the simulation.
+	simulation.nodes(donorData);   
+	firstRun = false;
+
+}
+
+
+function bubbles() {
+  makeBubbles();
+}
 
 function doNothing() {
   console.log("yieewwww")
@@ -313,7 +410,7 @@ function liberalparty() {
 
 // makeChart('Cormack Foundation Pty Ltd');
 
-activateFunctions[0] = doNothing;
+activateFunctions[0] = bubbles;
 activateFunctions[1] = cormack;
 activateFunctions[2] = laborHoldings;
 activateFunctions[3] = liberalparty;
