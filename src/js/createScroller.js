@@ -1,34 +1,35 @@
 import * as graphScroll from 'graph-scroll'
 import * as d3 from 'd3'
+import detectIE from './detectIE'
 
-export function createScroller() {
-var button,regPicks,intPicks,features,svg;
+export function createScroller(data) {
+
+var version = detectIE();	
+var features,svg;
 var activateFunctions = [];
 var pageWidth = document.documentElement.clientWidth;
 var pageHeight = document.documentElement.clientHeight;
+var width,height;
 
-var twoColumns = true;
+var twoColumns = false;
 
 if (twoColumns) {
-	var gW = document.querySelector("#graphic").getBoundingClientRect().width,
-	gH = gW*0.6,
-	r = 40;
+	var width = document.querySelector("#graphic").getBoundingClientRect().width,
+	height = width*0.6;
 }
 
 else {
-	var gW = document.querySelector("#container1").getBoundingClientRect().width,
-	gH = pageHeight*0.66,
-	r = 40;
+	var width = document.querySelector("#container1").getBoundingClientRect().width,
+	height = pageHeight*0.66;
 }
 
-console.log("pageHeight",pageHeight,"pageWidth", pageWidth, "gW",gW,"gH",gH)
+var margin = {top: 0, right: 0, bottom: 0, left:0};
+var scaleFactor = width/1300;
+
 
 d3.selectAll('#sections > div').style("height", pageHeight*0.33 + "px")
 
 d3.select(d3.selectAll('#sections > div').nodes().pop()).style("height", pageHeight + "px")
-
-// d3.select(d3.selectAll('#sections > div')[0].pop()).style("height", pageHeight + "px")
-
 
 var gs = graphScroll.graphScroll()
 	.container(d3.select('#container1'))
@@ -38,231 +39,285 @@ var gs = graphScroll.graphScroll()
 		activateFunctions[i]();
 	});
 
+var tempRadiusData = [];
+var tempLinkData = [];
+var nodeCounts = [];
 
-svg = d3.select('#graphic').append('svg')
-  .attr("width", gW)
-  .attr("height", gH)
-
-features = svg.append("g")
-
-console.log(svg);
-
-var scoreCounter = 0;
-function makeButton() {
-
-  console.log("makeButton");
-  console.log(svg);
-  button = features.append('circle');
-
-  button
-	.attr("id","button")
-	.style("fill","#4bc6df")
-	.attr("cx", gW/2)
-	.attr("cy",gH/2)
-	.attr("r",0)
+d3.values(data).forEach(function(d) {
+	nodeCounts.push(d.nodes.length);
+	d.nodes.forEach(function (nodeData) {
+		tempRadiusData.push(nodeData.totalDonationsMade);
+		tempRadiusData.push(nodeData.totalReceivedDonations);
+	})
+	d.links.forEach(function (linkData) {
+		tempLinkData.push(linkData.value);
+	})
+});
 
 
-} //end makeButton
-
-function submitTimes(times) {
-
-	var gformUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScSAqULG2Ozj7JPQAfjKs9nPYR8Kv3XhVACPH0ddCMKD3mc9Q/formResponse';
-	var dataTimes = {'entry.1898863029':times}
-	var data = '';
-	for (var key in dataTimes) {
-		data += encodeURIComponent(key) + '=' + encodeURIComponent(dataTimes[key]) + '&';
-	}
-	console.log(data)
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', gformUrl, true);
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	xhr.send(data.substr(0, data.length-1));
-
-}
+var selector = d3.select("#partySelector");
+var allEntities = d3.keys(data);
 
 
-d3.select("#testButton").on("click",function() { blahReq()})
 
-function regularReward() {
+allEntities.sort(function(x, y){
+   return d3.ascending(x, y);
+})
+
+allEntities.forEach(function (key) {
+	selector.append("option")
+		.attr("value",key)
+		.text(key)
+})
+
+selector.on("change", function() {
+	makeChart(d3.select(this).property('value'));
+	entityID = document.getElementById('partySelector').selectedIndex;
+	console.log(entityID);
+});
 
 
-  button
-	.transition()
-	.attr("r",40);
+var numFormat = d3.format(",.0f");
 
-	console.log('regularReward')
 
-	regPicks = [];
+svg = d3.select("#graphic").append("svg")
+				.attr("width", width - margin.left - margin.right)
+				.attr("height", height - margin.top - margin.bottom)
+				.attr("id", "svg")
+				.attr("overflow", "hidden");
 
-	scoreCounter = 0;
-	var hasClicked = false;
-	var firstTime;
+features = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	d3.select("#scoreCounter").html(scoreCounter);
 
-   function giveScore() {
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+var outline = d3.scaleOrdinal()
+				.domain(['Other Receipt','Donation','Mixed','Unknown'])
+				.range(['#005689','#b82266','#767676','#767676'])	
 
-	  button
-	  .transition()
-		.duration(50)
-		.attr("r",r-2)
-	  .transition()
-		.duration(50)
-		.attr("r",r) 
+var nodeColors = d3.scaleOrdinal()
+					.domain(['alp','greens','liberal','nationals','minor','AssociatedEntity','Donor'])
+					.range(['#b51800','#298422','#005689','#aad8f1','#767676','#fc8d62','#66c2a5'])				
 
-	var rewardPick = 100;
-	console.log(rewardPick);
-	scoreCounter = scoreCounter + rewardPick;
+var linkColors = d3.scaleOrdinal()
+					.domain(['Other Receipt','Donation','Mixed','Subscription','Unknown'])
+					.range(['#005689','#b82266','#767676','#767676'])							
 
-	if (!hasClicked) {
-	  firstTime = new Date();
-	  hasClicked = true;
-	}
+var radiusVal = 3;				
+
+var topRadius = 50 * scaleFactor;
+var bottomRadius = 4 * scaleFactor;
+
+var radius = d3.scaleSqrt()
+				.range([bottomRadius,topRadius])    
+				.domain(d3.extent(tempRadiusData))				
+
+var defs = svg.append("svg:defs");
+
+function arrow(color) {				
+	defs.append("svg:marker")    
+	    .attr("id", color.replace("#", ""))
+	    .attr("viewBox", "0 -5 10 10")
+	    .attr("refX", 0)
+	    .attr("refY", 0)
+	    .attr("markerWidth", 4)
+	    .attr("markerHeight", 4)
+	    .attr("orient", "auto")
+	    .style("fill", color)
+	    .style("opacity",0.8)
+	  .append("svg:path")
+	    .attr("d", "M0,-5L10,0L0,5");
+
+	return "url(" + color + ")";    				
+}    
+
+function makeChart(partyName) {
 	
-	var now = new Date();
+	var totalNodes = data[partyName].nodes.length;
 
-	var timeDiff = now - firstTime;
-	console.log(timeDiff);
-	regPicks.push({'score':scoreCounter,'time':timeDiff});
+	var simulation = d3.forceSimulation()
+		    .force("link", d3.forceLink().id(function(d) { return d.name; }).distance(distance))
+		    .force("collide", d3.forceCollide().radius(function(d) { 
+		    	if (d.totalDonationsMade > d.totalReceivedDonations ) {
+	      		return radius(d.totalDonationsMade) + radiusVal; 
+	      	}
 
-	console.log(scoreCounter);
-	d3.select("#scoreCounter").html(scoreCounter);
+	      	else {
+	      		return radius(d.totalReceivedDonations) + radiusVal; 
+	      	}
+		    }).iterations(2))
+		    .force("charge", d3.forceManyBody().strength(charge))
+		    .force("center", d3.forceCenter(width / 2, height / 2));		
+	var forceStrength = 150;	
 
-	  svg.append("text")
-		.attr("x", gW/2)
-		.attr("text-anchor", "middle")
-		.attr("y", gH/2 - r)
-		.text(rewardPick)
-	  .transition()
-		.duration(1000)
-		.ease(d3.easeLinear)
-		  .style("opacity",0)
-		  .attr("x", gW/2)
-		  .attr("y", gH*0.1)    
-		  .remove();
+	function charge(d) {
+		if (d.totalDonationsMade > d.totalReceivedDonations ) {
+				return -4 * (radius(d.totalDonationsMade) + radiusVal);
+			}	
+      	else {
+      		return -4 * (radius(d.totalReceivedDonations) + radiusVal); 
+      	}
 
+	}
+
+	function distance(d) {
+		var tempLinkLength = []
+		tempLinkLength.push(d.source.totalDonationsMade);
+		tempLinkLength.push(d.target.totalDonationsMade);
+		tempLinkLength.push(d.source.totalReceivedDonations);
+		tempLinkLength.push(d.target.totalReceivedDonations);
+		return 3 * (radius(d3.max(tempLinkLength)) + radiusVal);
 	}  
 
-	button
-	  .on("click", giveScore);
+	features.selectAll(".links")
+		.transition()
+		.style("opacity",0)
+		.remove();
 
-}
+	features.selectAll(".nodes circle")
+		.transition()
+		.attr("r",0)
+		.remove();
 
-
-function intermittentReward() {
-
-	console.log('intermittentReward')
-	intPicks = [];
-	scoreCounter = 0;
-	d3.select("#scoreCounter").html(scoreCounter);
-	var hasClicked = false;
-	var firstTime;
-
-	button
-	  .transition()
-	  .style("fill","#005689")
-
-	function giveScore() {
-
-	button
-	  .transition()
-		.duration(50)
-		.attr("r",r-2)
-	  .transition()
-		.duration(50)
-		.attr("r",r) 
-
-	var rewardOnly = [100,0,0,0,0];
-	var rewardPick = rewardOnly[Math.floor(Math.random() * (rewardOnly.length)) + 0];
-	console.log(rewardPick);
-	scoreCounter = scoreCounter + rewardPick;
-	console.log(scoreCounter);
+  var link = features.append("g")
+			    .attr("class", "links")
+			    .selectAll("line")
+				    .data(data[partyName].links)
+				    .enter().append("line")
+				    .attr("stroke-width", function(d) { return 2 })
+				    .attr("stroke", function(d) { 
+				    	return linkColors(d.type);
+				    })
+				    .each(function(d) {
+				    	if (version === false) {
+				    		d3.select(this).attr("marker-end", arrow(linkColors(d.type)));
+						}
+			        });
 
 
-	if (!hasClicked) {
-	  firstTime = new Date();
-	  hasClicked = true;
+	var node = features.append("g")
+	      .attr("class", "nodes")
+	    .selectAll("circle")
+	    .data(data[partyName].nodes)
+	    .enter().append("circle")
+	      .attr("r", function(d) { 
+	      	if (d.totalDonationsMade > d.totalReceivedDonations ) {
+	      		return radius(d.totalDonationsMade) + radiusVal; 
+	      	}
+
+	      	else {
+	      		return radius(d.totalReceivedDonations) + radiusVal; 
+	      	}
+	      	
+	      })
+	      .attr("fill", function(d) { return nodeColors(d.type); })
+	      .attr("stroke", function(d) {
+	      		return outline(d.nodeType);
+	      })
+	      .call(d3.drag()
+	          .on("start", dragstarted)
+	          .on("drag", dragged)
+	          .on("end", dragended));
+
+		  simulation
+		      .nodes(data[partyName].nodes)
+		      .on("tick", ticked);
+
+		  simulation.force("link")
+		      .links(data[partyName].links);
+
+
+
+	  function ticked() {
+
+	  	node.attr("cx", function(d) {
+	  		var r = radius(d3.max([d.totalDonationsMade, d.totalReceivedDonations]))
+	  			return d.x = Math.max(r + 4, Math.min(width - (r + 4), d.x)); 
+	  		})
+        	.attr("cy", function(d) {
+        	var r = radius(d3.max([d.totalDonationsMade, d.totalReceivedDonations]))	
+        		return d.y = Math.max(r + 4, Math.min(height - (r + 4), d.y)); 
+        	});
+
+	    link
+	        .attr("x1", function(d) { return d.source.x; })
+	        .attr("y1", function(d) { return d.source.y; })
+	        .attr("x2", function(d) { 
+	        	// var r = radius(d3.max([d.target.totalDonationsMade, d.target.totalReceivedDonations]))
+	        	// console.log(d.target);
+	        	// return d.target.x; 
+	        	return getTargetNodeCircumferencePoint(d)[0];
+	        })
+	        .attr("y2", function(d) { 
+	        	// var r = radius(d3.max([d.target.totalDonationsMade, d.target.totalReceivedDonations]))
+	        	// return d.target.y; 
+	        	return getTargetNodeCircumferencePoint(d)[1];
+	        });
+
+	    
+	    function getTargetNodeCircumferencePoint(d){
+	    	
+	    	var nodeBuffer = 12;
+	    	if (version != false) {
+				    		nodeBuffer = 4
+			}
+
+	        var t_radius = radius(d3.max([d.target.totalDonationsMade, d.target.totalReceivedDonations])) + nodeBuffer; // nodeWidth is just a custom attribute I calculate during the creation of the nodes depending on the node width
+	        var dx = d.target.x - d.source.x;
+	        var dy = d.target.y - d.source.y;
+	        var gamma = Math.atan2(dy,dx); // Math.atan2 returns the angle in the correct quadrant as opposed to Math.atan
+	        var tx = d.target.x - (Math.cos(gamma) * t_radius);
+	        var ty = d.target.y - (Math.sin(gamma) * t_radius);
+	        return [tx,ty]; 
+		}   
+
+
+	  	}
+
+	function dragstarted(d) {
+		d3.select(".d3-tip").style("display", "none");
+	  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+	  d.fx = d.x;
+	  d.fy = d.y;
 	}
-	
-	var now = new Date();
 
-	var timeDiff = now - firstTime;
-	console.log(timeDiff);
-	intPicks.push({'score':scoreCounter,'time':timeDiff});
-
-	d3.select("#scoreCounter").html(scoreCounter);
-	
-	  svg.append("text")
-		.attr("x", gW/2)
-		.attr("text-anchor", "middle")
-		.attr("y", gH/2 - r)
-		.text(rewardPick)
-	  .transition()
-		.duration(1000)
-		.ease(d3.easeLinear)
-		  .style("opacity",0)
-		  .attr("x", gW/2)
-		  .attr("y", gH*0.1)    
-		  .remove();
-
+	function dragged(d) {
+	  d.fx = d3.event.x;
+	  d.fy = d3.event.y;
 	}
 
+	function dragended(d) {
+		d3.select(".d3-tip").style("display", "block");
+	  if (!d3.event.active) simulation.alphaTarget(0);
+	  d.fx = null;
+	  d.fy = null;
+	}    
 
-	  button
-	.on("click", giveScore);
-
-  } //end intermittentReward();
-
-function graphResults() {
-
-  var times = {"regTotal":regPicks[regPicks.length-1],"intPicks":intPicks[intPicks.length-1]}
-  submitTimes(JSON.stringify(times));
-  var temp = regPicks.concat(intPicks);
-
-  button
-	.transition()
-	.attr("r",0);
-
-  
-  var x = d3.scaleLinear()
-			.range([0, gW]);
-
-  var y = d3.scaleLinear()
-			.range([gH, 0]);
-
-  x.domain(d3.extent(temp, function(d) { return d.time; }));
-  y.domain(d3.extent(temp, function(d) { return d.score; }));  
-
-  var line = d3.line()
-			.x(function(d) { return x(d.time); })
-			.y(function(d) { return y(d.score); });    
-
-  svg.append("path")
-	  .datum(regPicks)
-	  .attr("class", "line")
-	  .style("stroke","#4bc6df")
-	  .attr("d", line)
-
-  svg.append("path")
-	  .datum(intPicks)
-	  .attr("class", "line")
-	  .style("stroke","#005689")
-	  .attr("d", line)    
-
-} //end graphReg
-
+}  	
 
 function doNothing() {
   console.log("yieewwww")
 }
 
+function cormack() {
+	makeChart('Cormack Foundation Pty Ltd');
+}
 
-makeButton();
-activateFunctions[0] = regularReward;
-activateFunctions[1] = intermittentReward;
-activateFunctions[2] = doNothing;
-activateFunctions[3] = graphResults;
+function laborHoldings() {
+	makeChart('Labor Holdings Pty Ltd');
+}
 
+function liberalparty() {
+	makeChart('Liberal Party of Australia');
+}
+
+
+// makeChart('Cormack Foundation Pty Ltd');
+
+activateFunctions[0] = doNothing;
+activateFunctions[1] = cormack;
+activateFunctions[2] = laborHoldings;
+activateFunctions[3] = liberalparty;
+activateFunctions[4] = doNothing;
 
 
 d3.select('#footer')
