@@ -1,5 +1,6 @@
 import * as graphScroll from 'graph-scroll'
 import * as d3 from 'd3'
+import d3tip from 'd3-tip'
 import detectIE from './detectIE'
 
 export function createScroller(networkData,donorData) {
@@ -62,8 +63,6 @@ tempRadiusData.push(d3.max(donorData, function(d) {return d.sum}));
 
 var selector = d3.select("#partySelector");
 var allEntities = d3.keys(networkData);
-
-
 
 allEntities.sort(function(x, y){
    return d3.ascending(x, y);
@@ -159,7 +158,54 @@ function arrow(color) {
 	    .attr("d", "M0,-5L10,0L0,5");
 
 	return "url(" + color + ")";    				
-}    
+}   
+
+var tip1 = d3tip()
+	  .attr('class', 'd3-tip')
+		.direction(function(d) {
+		  if (d.x  > (width - (width/3))) {
+		   		return 'w'}
+
+		  else if (d.x  < width/3)  {
+		  	return 'e'
+		  }
+
+		  if (d.y < 100) {
+		  	return 's'
+		  }
+		  else {
+		  	return 'n'
+		  }
+		})
+	  .html(function(d) {
+	    return "<div class='tipText'><div><b>" + d.name + "</b></div><div>Received: $" + numFormat(d.totalReceivedDonations) + "</div><div>Given: $" + numFormat(d.totalDonationsMade) + "</div></div>";
+  	});	
+
+svg.call(tip1);
+
+var tip2 = d3tip()
+	  .attr('class', 'd3-tip')
+		.direction(function(d) {
+		  if (d.x  > (width - (width/3))) {
+		   		return 'w'}
+
+		  else if (d.x  < width/3)  {
+		  	return 'e'
+		  }
+
+		  if (d.y < 100) {
+		  	return 's'
+		  }
+		  else {
+		  	return 'n'
+		  }
+		})
+	  .html(function(d) {
+	    return "<div class='tipText'><div><b>" + d.cleanName + "</b></div><div>Given: $" + numFormat(d.sum) + "</div></div>";
+  	});	
+
+svg.call(tip2);
+
 
 function makeChart(partyName) {
 
@@ -260,6 +306,8 @@ function makeChart(partyName) {
 	      .attr("stroke", function(d) {
 	      		return outline(d.nodeType);
 	      })
+	      .on('mouseenter', tip1.show)
+  			.on('mouseleave', tip1.hide)
 	      .call(d3.drag()
 	          .on("start", dragstarted)
 	          .on("drag", dragged)
@@ -386,6 +434,8 @@ function makeBubbles(bubbleData) {
 	nodeContainer
 			.append("circle")		
 			.attr("fill", function(d) { return nodeColors(d.donType); })
+			.on('mouseenter', tip2.show)
+  			.on('mouseleave', tip2.hide)	
 			.attr("r", 0)
 
 	// nodeContainer

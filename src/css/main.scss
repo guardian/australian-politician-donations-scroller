@@ -4,6 +4,7 @@
 @import "general";
 @import "share";
 @import "grid";
+@import "d3-tip";
 
 .interactive-container {
 
@@ -95,6 +96,11 @@
 		font-size:1rem;
 		color:#767676;
 		font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
+	}
+
+	.tipText {
+		font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
+		font-size:0.9rem;
 	}
 
 	svg text {

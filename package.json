@@ -28,6 +28,7 @@
     "configFile": "src/js/config.js",
     "dependencies": {
       "d3": "npm:d3@^4.3.0",
+      "d3-tip": "npm:d3-tip@^0.7.1",
       "graph-scroll": "npm:graph-scroll@^0.0.3",
       "guardian/iframe-messenger": "github:guardian/iframe-messenger@master",
       "json": "github:systemjs/plugin-json@^0.1.0",
