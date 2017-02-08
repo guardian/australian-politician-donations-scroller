@@ -4,30 +4,34 @@ import detectIE from './detectIE'
 
 export function createScroller(networkData,donorData) {
 
+var entityID;
 var version = detectIE();	
 var features,svg,simulation;
 var activateFunctions = [];
 var pageWidth = document.documentElement.clientWidth;
 var pageHeight = document.documentElement.clientHeight;
-var width,height;
+var width,height,headerHeight;
 var firstRun = true;
-var twoColumns = false;
+var forceStrength,bubblesExist;
+var chartTitle = d3.select("#chartTitle");
 
-if (twoColumns) {
-	var width = document.querySelector("#graphic").getBoundingClientRect().width,
-	height = width*0.6;
-}
 
-else {
-	var width = document.querySelector("#container1").getBoundingClientRect().width,
-	height = pageHeight*0.66;
-}
+width = document.querySelector("#container1").getBoundingClientRect().width;
+headerHeight = document.querySelector(".header").getBoundingClientRect().height;
+height = pageHeight - headerHeight;
 
 var margin = {top: 0, right: 0, bottom: 0, left:0};
 var scaleFactor = width/1300;
 
 
-d3.selectAll('#sections > div').style("height", pageHeight*0.33 + "px")
+var divs = d3.selectAll('#sections > div')
+
+divs.each(function (d,i) {
+	if (i > 0) {
+		d3.select(this).style("height", pageHeight*0.33 + "px")
+	}
+});
+
 
 d3.select(d3.selectAll('#sections > div').nodes().pop()).style("height", pageHeight + "px")
 
@@ -54,6 +58,7 @@ d3.values(networkData).forEach(function(d) {
 	})
 });
 
+tempRadiusData.push(d3.max(donorData, function(d) {return d.sum}));
 
 var selector = d3.select("#partySelector");
 var allEntities = d3.keys(networkData);
@@ -73,7 +78,6 @@ allEntities.forEach(function (key) {
 selector.on("change", function() {
 	makeChart(d3.select(this).property('value'));
 	entityID = document.getElementById('partySelector').selectedIndex;
-	console.log(entityID);
 });
 
 
@@ -87,6 +91,34 @@ svg = d3.select("#graphic").append("svg")
 				.attr("overflow", "hidden");
 
 features = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+var leftLabel = features
+	.append("text")
+	.style("opacity",0)
+	.attr("class", "clusterLabel left")
+	.attr("text-anchor", "middle")
+	.attr("x", width*0.33)
+	.attr("y", 0.2*height)
+	.text("Associated entities");
+
+var rightLabel = features
+	.append("text")
+	.style("opacity",0)
+	.attr("class", "clusterLabel right")
+	.attr("text-anchor", "middle")
+	.attr("x", width*0.66)
+	.attr("y", 0.2*height)
+	.text("Other donors");	
+
+var middleLabel = features
+	.append("text")
+	.style("opacity",0)
+	.attr("class", "clusterLabel middle")
+	.attr("text-anchor", "middle")
+	.attr("x", width/2)
+	.attr("y", 0.2*height)
+	.text("Top 20 donors declared by parties");	
 
 
 var outline = d3.scaleOrdinal()
@@ -104,7 +136,7 @@ var linkColors = d3.scaleOrdinal()
 var radiusVal = 3;				
 
 var topRadius = 50 * scaleFactor;
-var bottomRadius = 4 * scaleFactor;
+var bottomRadius = 3 * scaleFactor;
 
 var radius = d3.scaleSqrt()
 				.range([bottomRadius,topRadius])    
@@ -134,8 +166,6 @@ function makeChart(partyName) {
 	console.log("makeChart")
 
 	simulation.stop();
-
-	console.log(donorData);
 
 	features.selectAll(".links")
 		.transition()
@@ -172,7 +202,7 @@ function makeChart(partyName) {
 		    .force("charge", d3.forceManyBody().strength(charge))
 		    .force("center", d3.forceCenter(width / 2, height / 2));	
 
-	var forceStrength = 150;	
+	forceStrength = 150;	
 
 	function charge(d) {
 		if (d.totalDonationsMade > d.totalReceivedDonations ) {
@@ -311,111 +341,205 @@ function makeChart(partyName) {
 
 }  
 
-function makeBubbles() {
+function makeBubbles(bubbleData) {
 
-	console.log("makeBubbles", firstRun, donorData);
+	bubblesExist = true;
+
 	if (!firstRun) {
 		simulation.stop();
 	}
-
-	var bubbleRadius = d3.scaleSqrt().range([4, 50]).domain(d3.extent(donorData, function(d) {return d.sum}));
-
+	
 	features.selectAll(".links")
 		.transition()
 		.style("opacity",0)
 		.remove();
 
-	// features.selectAll(".nodes circle")
-	// 	.transition()
-	// 	.attr("r",0);
-
 	features.selectAll(".nodes")
 		.remove();
 
 	var center = {x: width / 2, y: height / 2};
-	var forceStrength = 0.03;
+	forceStrength = 0.03;
 
-	simulation = d3.forceSimulation(donorData)
-	    .velocityDecay(0.2)
-		  .force('x', d3.forceX().strength(forceStrength).x(center.x))
-		  .force('y', d3.forceY().strength(forceStrength).y(center.y))
-		  .force('charge', d3.forceManyBody().strength(-10))
-		  .force("collide", d3.forceCollide().radius(function(d) { return bubbleRadius(d.sum) + 0.5; }).iterations(2))
+	simulation = d3.forceSimulation(bubbleData)
+		.velocityDecay(0.2)
+		.force('x', d3.forceX().strength(forceStrength).x(center.x))
+		.force('y', d3.forceY().strength(forceStrength).y(center.y))
+		.force("collide", d3.forceCollide().radius(function(d) { return radius(d.sum) + 0.5; }).iterations(2))
+		.force('charge', d3.forceManyBody().strength(-3))
 	    .alphaTarget(1)
 	    .on("tick", ticked);
 
 	function charge(d) {
-	  return -forceStrength * Math.pow(bubbleRadius(d.sum), 2.0);
+		return -forceStrength * Math.pow(radius(d.sum), 2.0);
 	}    
 
 	function ticked() {
-	 	features.selectAll(".nodes").attr("transform", function(d) { return "translate(" + Math.max(bubbleRadius(d.sum), Math.min(width - bubbleRadius(d.sum), d.x)) + "," + Math.max(bubbleRadius(d.sum), Math.min(height - bubbleRadius(d.sum), d.y)) + ")" });
+		features.selectAll(".nodes").attr("transform", function(d) { return "translate(" + Math.max(radius(d.sum), Math.min(width - radius(d.sum), d.x)) + "," + Math.max(radius(d.sum), Math.min(height - radius(d.sum), d.y)) + ")" });
 	}
 
-	var node = features.selectAll(".nodes").data(donorData);
+	var node = features.selectAll(".nodes").data(bubbleData);
 
 	var nodeContainer = node.enter()
 			.append("g")
-			.attr("class","nodes");
+			.attr("class", function(d) { return "nodes " + d.donType; })
 
 	nodeContainer
 			.append("circle")		
 			.attr("fill", function(d) { return nodeColors(d.donType); })
 			.attr("r", 0)
 
-	nodeContainer
-			.append("text")
-			.attr("text-anchor", "middle")
-			.attr("dy", function(d) { return -1 * bubbleRadius(d.sum);})		
-			.text(function(d) { return "$" + d.sum });	
+	// nodeContainer
+	// 		.append("text")
+	// 		.attr("text-anchor", "middle")
+	// 		.attr("dy", function(d) { return -1 * bubbleRadius(d.sum);})		
+	// 		.text(function(d) { return d.cleanName });	
 
 	d3.selectAll(".nodes circle")
 		.transition()
 		.attr("r",function (d) {
-			console.log(d);
-			return bubbleRadius(d.sum);
+			return radius(d.sum);
 		});
 
 	d3.selectAll(".nodes text")
 		.transition()
-		.attr("dy", function(d) { return -1 * bubbleRadius(d.sum);});
+		.attr("dy", function(d) { return -1 * radius(d.sum);});
 
 	// Update and restart the simulation.
-	simulation.nodes(donorData);   
+	simulation.nodes(bubbleData);   
 	firstRun = false;
 
 }
 
-
 function bubbles() {
-  makeBubbles();
+	console.log("bubbles");
+	makeBubbles(donorData);
+	simulation.force('x', d3.forceX().strength(forceStrength).x(width/2));
+	simulation.alpha(1).restart();
+	
 }
 
-function doNothing() {
-  console.log("yieewwww")
+function adjustHeight() {
+	console.log("adjustHeight");
+	height = pageHeight*0.66;
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
+
+	middleLabel.text("Top 20 donors declared by parties");	
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 1);	
+	rightLabel.transition().style("opacity", 0);
+	
 }
+
+function splitBubbles() {
+
+	makeBubbles(donorData);
+
+	forceStrength = 0.03;
+    simulation.force('x', d3.forceX().strength(forceStrength).x(nodePos));
+    simulation.alpha(1).restart();
+    
+    leftLabel.transition().style("opacity", 1);
+	middleLabel.transition().style("opacity", 0);
+	rightLabel.transition().style("opacity", 1);
+	
+
+ 	
+ 	function nodePos(d) {
+ 		if (d.donType === "AssociatedEntity") {
+ 			return (width * 0.33)
+ 		}
+
+ 		else {
+ 			return (width * 0.66)
+ 		}
+ 	}
+
+}
+
+function highlightEntities() {
+
+	
+
+	d3.selectAll(".nodes.Donor")
+    	.transition()
+    	.attr("r",0)
+    	.remove();
+
+    var onlyEntities = donorData.filter(function(d) { return d.donType == "AssociatedEntity" });
+
+   	makeBubbles(onlyEntities);
+   	simulation.force('x', d3.forceX().strength(forceStrength).x(width/2));
+	simulation.alpha(1).restart();	
+	
+	middleLabel.text("Associated entities");
+
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 1);
+	rightLabel.transition().style("opacity", 0);
+	chartTitle.transition().style("opacity",0);
+
+
+};
+
 
 function cormack() {
+	
+
+	middleLabel.transition().style("opacity", 0);
+
+	bubblesExist = false;	
 	makeChart('Cormack Foundation Pty Ltd');
+	chartTitle.text("Cormack Foundation Pty Ltd");
+	chartTitle.transition().style("opacity",1);
 }
 
 function laborHoldings() {
 	makeChart('Labor Holdings Pty Ltd');
+	chartTitle.text("Labor Holdings Pty Ltd");
 }
 
 function liberalparty() {
 	makeChart('Liberal Party of Australia');
+	chartTitle.text("Liberal Party of Australia");
+}
+
+function laborparty() {
+	makeChart('Australian Labor Party (ALP)');
+	chartTitle.transition().style("opacity",1);
+	chartTitle.text("Australian Labor Party (ALP)");
+	d3.select("#selectorContainer")
+		.transition()
+		.style("opacity",0);
+}
+
+function showall() {
+	chartTitle.transition().style("opacity",0);
+	makeChart('1973 Foundation Pty Ltd');
+
+	d3.select("#selectorContainer")
+		.transition()
+		.style("opacity",1)
+
+}		
+
+function doNothing() {
+	console.log("yieewwww")
 }
 
 
 // makeChart('Cormack Foundation Pty Ltd');
 
 activateFunctions[0] = bubbles;
-activateFunctions[1] = cormack;
-activateFunctions[2] = laborHoldings;
-activateFunctions[3] = liberalparty;
-activateFunctions[4] = doNothing;
-
+activateFunctions[1] = adjustHeight;
+activateFunctions[2] = splitBubbles;
+activateFunctions[3] = highlightEntities;
+activateFunctions[4] = cormack;
+activateFunctions[5] = laborHoldings;
+activateFunctions[6] = liberalparty;
+activateFunctions[7] = laborparty;
+activateFunctions[8] = showall;
 
 d3.select('#footer')
 	.style({'margin-bottom': window.innerHeight - 500 + 'px', padding: '100px'})

@@ -13,6 +13,7 @@
 		background-size: 100%;
 		min-height:400px;
 		position: relative;
+		max-height:33%;
 	}
 
 	.center {
@@ -29,12 +30,33 @@
 
 	.graphicCol {
 		position: fixed;
-		top:33%;
+		bottom:0;
+	}
+
+	#scrollDown {
+		width:50px;
+		height:50px;
+		background-image: url("../assets/imgs/down-arrow.svg");
+		background-size: 45px 45px;
+		background-repeat: no-repeat;
+	    background-position: center; 
+	    margin-top:20px;
+	    margin-bottom:20px;
+	}
+
+	.scrollerSection {
+		.assEnt {
+			border-bottom: 2px solid #fc8d62;
+		}
+
+		.donor {
+			border-bottom: 2px solid #66c2a5;
+		}
 	}
 
 	.graphicContainer.graph-scroll-fixed #graphic {
 		position: fixed;
-		top:33%;
+		bottom:0;
 	}
 
 	.headerContainer {
@@ -44,8 +66,48 @@
 		color:#FFF;
 	}
 
-	#header h1 {
-		font-size:3rem; 
+	.header h1 {
+		font-size:3rem;
+		font-weight:strong; 
+	}
+
+	.header .standFirst {
+
+		color:#767676;
+		font-size:1.5rem;
+	}
+
+	#chartTitle {
+		position:absolute;
+		top:5%;
+		left:50%;
+		opacity:0;
+	}
+
+	#selectorContainer {
+		position:absolute;
+		top:5%;
+		left:5%;
+		opacity:0;
+	}
+
+	.chartSans {
+		font-size:1rem;
+		color:#767676;
+		font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
+	}
+
+	svg text {
+		fill:#767676;
+		font-size:1rem;
+		font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
+	}
+
+	.subTitle {
+		font-size:1rem;
+		color:#808080;
+		font-weight:bold;
+		font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
 	}
 
 	#container1, #container2{
@@ -64,8 +126,6 @@
 		opacity: 1;
 	}
 	
-	
-
 	.graphicContainer.graph-scroll-fixed {
 		position: absolute;
 		bottom: 0px;
@@ -73,9 +133,12 @@
 
 	#graphic {
 		position: relative;
-		float:right;
-		width:100%;
-	}
+		// float:right;
+		// width:100%;
+		-webkit-box-shadow: 0px -13px 16px -11px rgba(0,0,0,0.75);
+		-moz-box-shadow: 0px -13px 16px -11px rgba(0,0,0,0.75);
+		box-shadow: 0px -13px 16px -11px rgba(0,0,0,0.75);
+		}
 
 	.mono{
 		font-family: monospace;

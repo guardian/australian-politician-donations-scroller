@@ -34,6 +34,10 @@ a {
             max-width: map-get($mq-breakpoints, $bp);
         }
     }
+
+    p {
+        @include fs-bodyCopy(3);
+    }
 }
 
 .interactive-es6-headline {
