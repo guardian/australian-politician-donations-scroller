@@ -30,19 +30,29 @@ if (gndHeader != null) {
 
 width = document.querySelector("#container1").getBoundingClientRect().width;
 headerHeight = document.querySelector(".header").getBoundingClientRect().height;
-height = pageHeight - headerHeight - headerOffset;
+
+if (functionCounter > 0) {
+	height = pageHeight * 0.66;
+}
+
+else {
+	height = pageHeight - headerHeight - headerOffset;
+}
+
 
 var margin = {top: 0, right: 0, bottom: 0, left:0};
 var scaleFactor = width/1300;
 var divs = d3.selectAll('#sections > div')
 
+console.log(divs.length);
 divs.each(function (d,i) {
-	if (i > 0) {
+	if (i > 0 && i < divs.size() -1) {
 		d3.select(this).style("min-height", pageHeight*0.4 + "px")
 	}
 });
 
-d3.select(d3.selectAll('#sections > div').nodes().pop()).style("height", pageHeight + "px")
+d3.select('#gv-footer')
+	.style("height", pageHeight*0.66 + "px");
 
 var gs = graphScroll.graphScroll()
 	.container(d3.select('#container1'))
@@ -91,6 +101,7 @@ selector.on("change", function() {
 
 var numFormat = d3.format(",.0f");
 
+d3.select("#svg").remove();
 
 svg = d3.select("#graphic").append("svg")
 				.attr("width", width - margin.left - margin.right)
@@ -245,8 +256,10 @@ function makeChart(partyName) {
 
 	console.log("makeChart")
 
-	simulation.stop();
-
+	if (typeof simulation !== 'undefined') {
+		simulation.stop();	
+	}
+	
 	features.selectAll(".links")
 		.transition()
 		.style("opacity",0)
@@ -495,6 +508,7 @@ function makeBubbles(bubbleData) {
 }
 
 function bubbles() {
+	functionCounter = 0;
 	console.log("bubbles");
 	makeBubbles(donorData);
 	simulation.force('x', d3.forceX().strength(forceStrength).x(width/2));
@@ -503,6 +517,7 @@ function bubbles() {
 }
 
 function adjustHeight() {
+	functionCounter = 1;
 	console.log("adjustHeight");
 	height = pageHeight*0.66;
 	d3.select("#graphic svg")
@@ -518,6 +533,11 @@ function adjustHeight() {
 
 function splitBubbles() {
 
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
+
+	functionCounter = 2;
 	makeBubbles(donorData);
 
 	forceStrength = 0.03;
@@ -544,12 +564,16 @@ function splitBubbles() {
 
 function highlightEntities() {
 
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
 	
-
+	functionCounter = 4;
 	d3.selectAll(".nodes.Donor")
     	.transition()
     	.attr("r",0)
     	.remove();
+
 
     var onlyEntities = donorData.filter(function(d) { return d.donType == "AssociatedEntity" });
 
@@ -569,8 +593,17 @@ function highlightEntities() {
 
 
 function cormack() {
-	
 
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
+
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 0);
+	rightLabel.transition().style("opacity", 0);
+	chartTitle.transition().style("opacity",1);
+	
+	functionCounter = 5;
 	middleLabel.transition().style("opacity", 0);
 
 	bubblesExist = false;	
@@ -580,31 +613,62 @@ function cormack() {
 }
 
 function laborHoldings() {
+
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
+	
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 0);
+	rightLabel.transition().style("opacity", 0);
+	chartTitle.transition().style("opacity",1);
+
+	functionCounter = 6;
 	makeChart('Labor Holdings Pty Ltd');
 	chartTitle.text("Labor Holdings Pty Ltd");
 }
 
 function liberalparty() {
+
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
+
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 0);
+	rightLabel.transition().style("opacity", 0);
+	chartTitle.transition().style("opacity",1);
+
+	functionCounter = 7;
 	makeChart('Liberal Party of Australia');
 	chartTitle.text("Liberal Party of Australia");
 }
 
 function laborparty() {
+
+	d3.select("#graphic svg")
+		.transition()
+		.attr("height",height);
+		
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 0);
+	rightLabel.transition().style("opacity", 0);
+	chartTitle.transition().style("opacity",1);
+
+	functionCounter = 8;
 	makeChart('Australian Labor Party (ALP)');
 	chartTitle.transition().style("opacity",1);
 	chartTitle.text("Australian Labor Party (ALP)");
-	d3.select("#selectorContainer")
-		.transition()
-		.style("opacity",0);
 }
 
 function showall() {
-	chartTitle.transition().style("opacity",0);
-	makeChart('1973 Foundation Pty Ltd');
+	leftLabel.transition().style("opacity", 0);
+	middleLabel.transition().style("opacity", 0);
+	rightLabel.transition().style("opacity", 0);
+	chartTitle.transition().style("opacity",1);
 
-	d3.select("#selectorContainer")
-		.transition()
-		.style("opacity",1)
+	functionCounter = 9;
+	makeChart('1973 Foundation Pty Ltd');
 
 }		
 
@@ -639,7 +703,6 @@ activateFunctions[7] = liberalparty;
 activateFunctions[8] = laborparty;
 activateFunctions[9] = showall;
 
-d3.select('#footer')
-	.style({'margin-bottom': window.innerHeight - 500 + 'px', padding: '100px'})
+
 
 }
