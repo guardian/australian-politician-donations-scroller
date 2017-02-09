@@ -20,9 +20,9 @@ if (pageWidth < 640) {
 	mobile = true;
 }
 
-var headerOffset = 0;
+var headerOffset = 48;
 
-var gndHeader = document.getElementById("#heade");
+var gndHeader = document.getElementById("#header");
 
 if (gndHeader != null) {
 	headerOffset = gndHeader.getBoundingClientRect().height
