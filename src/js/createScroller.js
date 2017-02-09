@@ -15,24 +15,32 @@ var width,height,headerHeight;
 var firstRun = true;
 var forceStrength,bubblesExist;
 var chartTitle = d3.select("#chartTitle");
+var mobile = false;
+if (pageWidth < 640) {
+	mobile = true;
+}
 
+var headerOffset = 0;
+
+var gndHeader = document.getElementById("#heade");
+
+if (gndHeader != null) {
+	headerOffset = gndHeader.getBoundingClientRect().height
+}
 
 width = document.querySelector("#container1").getBoundingClientRect().width;
 headerHeight = document.querySelector(".header").getBoundingClientRect().height;
-height = pageHeight - headerHeight;
+height = pageHeight - headerHeight - headerOffset;
 
 var margin = {top: 0, right: 0, bottom: 0, left:0};
 var scaleFactor = width/1300;
-
-
 var divs = d3.selectAll('#sections > div')
 
 divs.each(function (d,i) {
 	if (i > 0) {
-		d3.select(this).style("height", pageHeight*0.33 + "px")
+		d3.select(this).style("min-height", pageHeight*0.4 + "px")
 	}
 });
-
 
 d3.select(d3.selectAll('#sections > div').nodes().pop()).style("height", pageHeight + "px")
 
@@ -40,6 +48,7 @@ var gs = graphScroll.graphScroll()
 	.container(d3.select('#container1'))
 	.graph(d3.selectAll('.graphicContainer'))
 	.sections(d3.selectAll('#sections > div'))
+	.offset(headerHeight - 200)
 	.on('active', function(i){
 		activateFunctions[i]();
 	});
@@ -96,8 +105,23 @@ var leftLabel = features
 	.append("text")
 	.style("opacity",0)
 	.attr("class", "clusterLabel left")
-	.attr("text-anchor", "middle")
-	.attr("x", width*0.33)
+	.attr("text-anchor", function() { 
+		if (mobile) {
+			return "left"
+		}
+
+		else {
+			return "middle"
+		}
+	})
+	.attr("x", function() {
+		if (mobile) {
+			return 5
+		}
+		else {
+			return width*0.33
+		}
+	})
 	.attr("y", 0.2*height)
 	.text("Associated entities");
 
@@ -105,8 +129,18 @@ var rightLabel = features
 	.append("text")
 	.style("opacity",0)
 	.attr("class", "clusterLabel right")
-	.attr("text-anchor", "middle")
-	.attr("x", width*0.66)
+	.attr("text-anchor", function() { 
+		if (mobile) {
+			return "left"
+		}
+
+		else {
+			return "middle"
+		}
+	})
+	.attr("x", function() {
+			return width*0.66
+		})
 	.attr("y", 0.2*height)
 	.text("Other donors");	
 
@@ -578,18 +612,32 @@ function doNothing() {
 	console.log("yieewwww")
 }
 
+var keyVisible = false;
+var keyPanel = d3.select("#keyPanel");
 
-// makeChart('Cormack Foundation Pty Ltd');
+d3.select("#infoButton").on("click", function(d) {
+	console.log("click");
+	if (keyVisible) {
+		keyPanel.transition().style("opacity",0)
+		keyVisible = false;
+	}
+	else {
+		keyPanel.transition().style("opacity",0.8)
+		keyVisible = true;
+	}
+});
+
 
 activateFunctions[0] = bubbles;
 activateFunctions[1] = adjustHeight;
 activateFunctions[2] = splitBubbles;
 activateFunctions[3] = highlightEntities;
 activateFunctions[4] = cormack;
-activateFunctions[5] = laborHoldings;
-activateFunctions[6] = liberalparty;
-activateFunctions[7] = laborparty;
-activateFunctions[8] = showall;
+activateFunctions[5] = cormack;
+activateFunctions[6] = laborHoldings;
+activateFunctions[7] = liberalparty;
+activateFunctions[8] = laborparty;
+activateFunctions[9] = showall;
 
 d3.select('#footer')
 	.style({'margin-bottom': window.innerHeight - 500 + 'px', padding: '100px'})

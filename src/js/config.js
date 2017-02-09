@@ -24,7 +24,7 @@ System.config({
     "core-js": "npm:core-js@1.2.6",
     "d3": "npm:d3@4.5.0",
     "d3-tip": "npm:d3-tip@0.7.1",
-    "graph-scroll": "npm:graph-scroll@0.0.3",
+    "graph-scroll": "npm:graph-scroll@0.0.4",
     "guardian/iframe-messenger": "github:guardian/iframe-messenger@master",
     "json": "github:systemjs/plugin-json@0.1.2",
     "requests": "npm:requests@0.1.7",
@@ -220,7 +220,7 @@ System.config({
     "npm:graceful-readlink@1.0.1": {
       "fs": "github:jspm/nodelibs-fs@0.1.2"
     },
-    "npm:graph-scroll@0.0.3": {
+    "npm:graph-scroll@0.0.4": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "d3": "npm:d3@4.5.0",
       "process": "github:jspm/nodelibs-process@0.1.2"

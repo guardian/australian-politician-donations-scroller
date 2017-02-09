@@ -8,13 +8,10 @@
 
 .interactive-container {
 
-	#header {
-		width: 100%;
-		background: #ffffff url("../img/pokies-placeholder.jpg") no-repeat ;
-		background-size: 100%;
-		min-height:400px;
-		position: relative;
-		max-height:33%;
+
+	h2 {
+		font-size:1.5rem;
+		font-weight:bold;
 	}
 
 	.center {
@@ -32,18 +29,21 @@
 	.graphicCol {
 		position: fixed;
 		bottom:0;
+		background: #FFF;
 	}
 
 	#scrollDown {
 		width:50px;
 		height:50px;
-		background-image: url("../assets/imgs/down-arrow.svg");
+		background-image: url("assets/imgs/down-arrow.svg");
 		background-size: 45px 45px;
 		background-repeat: no-repeat;
 	    background-position: center; 
 	    margin-top:20px;
 	    margin-bottom:20px;
 	}
+
+	
 
 	.scrollerSection {
 		.assEnt {
@@ -52,6 +52,26 @@
 
 		.donor {
 			border-bottom: 2px solid #66c2a5;
+		}
+
+		.laborParty {
+			border-bottom: 2px solid #b51800;
+		}
+
+		.liberalParty {
+			border-bottom: 2px solid #005689;
+		}
+
+		.donLink {
+			border-bottom: 2px solid #b82266;
+		}
+
+		.mixed {
+			border-bottom: 2px solid #767676;
+		}
+
+		.otherReceipt {
+			border-bottom: 2px solid #005689;
 		}
 	}
 
@@ -69,13 +89,16 @@
 
 	.header h1 {
 		font-size:3rem;
-		font-weight:strong; 
+		line-height:3rem; 
+		font-weight:bold;
+		margin-bottom:25px;
 	}
 
 	.header .standFirst {
 
 		color:#767676;
 		font-size:1.5rem;
+		line-height:1.5rem;
 	}
 
 	#chartTitle {
@@ -87,8 +110,8 @@
 
 	#selectorContainer {
 		position:absolute;
-		top:5%;
-		left:5%;
+		top: 17px;
+    	left: 60px;
 		opacity:0;
 	}
 
@@ -125,7 +148,7 @@
 	#sections > div, #sections2 > div{
 		background: white;
 		opacity: .2;
-		margin-bottom:1%;
+		margin-bottom:120px;
 	}
 	
 	#sections > div.graph-scroll-active, #sections2 > div.graph-scroll-active{
@@ -136,6 +159,57 @@
 		position: absolute;
 		bottom: 0px;
 	}
+
+	#infoButton {
+		position:absolute;
+		top:10px;
+		left:10px;
+		width:30px;
+		height:30px;
+		background-image: url("assets/imgs/info.svg");
+		background-size: 25px 25px;
+		background-repeat: no-repeat;
+	    background-position: center; 
+	   	cursor:pointer;
+	}
+
+	#keyPanel {
+		position:absolute;
+		left:10px;
+		top:40px;
+		border:2px solid #eaeaea;
+		padding:1%; 
+		opacity:0;
+		pointer-events:none;
+		background:#FFF; 
+	}
+
+	.key ul {
+		list-style-type:none;
+	}
+
+	.keyText {
+		font-size:0.8rem;
+	}
+
+	.keyDiv .keyCircle:first-of-type {
+	    margin-left:0;
+	}
+
+	.keyCircle {
+		width:12px;
+		height:12px;
+		border-radius: 50%;
+		display: inline-block;
+	}
+
+	.keyFilledCircle {
+		width:10px;
+		height:10px;
+		border-radius: 50%;
+		display: inline-block;
+	}
+	
 
 	#graphic {
 		position: relative;
@@ -189,9 +263,9 @@
 
 	@media (max-width: 450px) {
 
-		#partySelector {
-			max-width: 100px;
-		}
+		// #partySelector {
+		// 	max-width: 100px;
+		// }
 
 		.tipText {
 		font-size:0.8rem;
@@ -217,32 +291,7 @@
 		-o-box-shadow: 0px 0px 10px 4px #242424;
 	}
 
-	.keyText {
-		font-size:0.8rem;
-	}
-
-	.keyDiv {
-		display: inline-block;
-		margin-left:10px;
-	}
-
-	.keyDiv .keyCircle:first-of-type {
-	    margin-left:0;
-	}
-
-	.keyCircle {
-		width:12px;
-		height:12px;
-		border-radius: 50%;
-		display: inline-block;
-	}
-
-	.keyFilledCircle {
-		width:10px;
-		height:10px;
-		border-radius: 50%;
-		display: inline-block;
-	}
+	
 
 	@media(min-width:980px){
 
@@ -354,6 +403,28 @@
 		max-width: 220px;
 	}
 }
+
+@media(max-width:640px){
+
+	.header h1 {
+		font-size:1.5rem;
+		line-height:1.5rem;
+	}
+
+	.header .standFirst  {
+		font-size:1rem;
+		line-height:1rem;
+	}
+
+
+	#selectorContainer {
+		top: 17px;
+    	left: 60px;
+	}
+
+
+}
+
 
 
 }
